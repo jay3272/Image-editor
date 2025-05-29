@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔術圈選去背工具</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.2);
+            transform: scale(1.02);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="range"] {
+            width: 100px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .add-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+        }
+
+        .subtract-btn {
+            background: linear-gradient(45deg, #f44336, #da190b);
+        }
+
+        .complete-btn {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+            font-weight: bold;
+            padding: 12px 25px;
+        }
+
+        .canvas-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .canvas-wrapper {
+            text-align: center;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .canvas-wrapper:hover {
+            transform: translateY(-3px);
+        }
+
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            max-width: 450px;
+            max-height: 450px;
+            cursor: crosshair;
+        }
+
+        .canvas-title {
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .mode-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .mode-select {
+            background: #4CAF50;
+        }
+
+        .mode-add {
+            background: #2196F3;
+        }
+
+        .mode-subtract {
+            background: #f44336;
+        }
+
+        .instructions {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .download-area {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            font-size: 16px;
+            padding: 12px 30px;
+        }
+
+        .value-display {
+            min-width: 30px;
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .selection-tools {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .tool-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 魔術圈選去背工具</h1>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>將圖片拖放到這裡，或點擊下方按鈕選擇圖片</p>
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">選擇圖片</button>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div class="instructions">
+            <strong>使用說明：</strong><br>
+            1. 選擇或拖放圖片到上方區域<br>
+            2. 調整容忍度，然後在左側原圖上點擊<strong>要保留的物體</strong><br>
+            3. 選取後會出現虛線框，可使用「增加範圍」或「減少範圍」調整<br>
+            4. 滿意選取範圍後，點擊「完成去背」按鈕（背景會被移除）<br>
+            5. 可重複選取多個要保留的區域，最後下載結果
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="tolerance">容忍度：</label>
+                <input type="range" id="tolerance" min="1" max="100" value="30">
+                <span class="value-display" id="toleranceValue">30</span>
+            </div>
+            <button id="resetBtn" disabled>重置</button>
+            <button id="undoBtn" disabled>復原</button>
+        </div>
+
+        <div class="selection-tools">
+            <div class="tool-group">
+                <button id="addRangeBtn" class="add-btn" disabled>➕ 增加範圍</button>
+                <button id="subtractRangeBtn" class="subtract-btn" disabled>➖ 減少範圍</button>
+            </div>
+            <div class="tool-group">
+                <button id="completeBtn" class="complete-btn" disabled>✅ 完成去背</button>
+                <button id="cancelSelectionBtn" disabled>❌ 取消選取</button>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <div class="canvas-wrapper">
+                <div class="canvas-title">原圖（點擊要保留的物體）</div>
+                <div class="mode-indicator mode-select" id="modeIndicator">點擊選取</div>
+                <canvas id="originalCanvas"></canvas>
+            </div>
+            <div class="canvas-wrapper">
+                <div class="canvas-title">去背結果</div>
+                <canvas id="resultCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="download-area">
+            <button class="download-btn" id="downloadBtn" disabled>下載去背圖片</button>
+        </div>
+    </div>
+
+    <script>
+        class MagicSelectTool {
+            constructor() {
+                this.originalCanvas = document.getElementById('originalCanvas');
+                this.resultCanvas = document.getElementById('resultCanvas');
+                this.originalCtx = this.originalCanvas.getContext('2d');
+                this.resultCtx = this.resultCanvas.getContext('2d');
+                
+                this.originalImageData = null;
+                this.currentImageData = null;
+                this.selectedPixels = new Set();
+                this.tolerance = 30;
+                this.history = [];
+                
+                this.mode = 'select'; // 'select', 'add', 'subtract'
+                this.animationId = null;
+                this.dashOffset = 0;
+                
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                const fileInput = document.getElementById('fileInput');
+                const uploadArea = document.getElementById('uploadArea');
+                const toleranceSlider = document.getElementById('tolerance');
+                const toleranceValue = document.getElementById('toleranceValue');
+                const resetBtn = document.getElementById('resetBtn');
+                const undoBtn = document.getElementById('undoBtn');
+                const downloadBtn = document.getElementById('downloadBtn');
+                const addRangeBtn = document.getElementById('addRangeBtn');
+                const subtractRangeBtn = document.getElementById('subtractRangeBtn');
+                const completeBtn = document.getElementById('completeBtn');
+                const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
+
+                // 文件上傳
+                fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+                
+                // 拖放功能
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+                
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+                
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        this.loadImage(files[0]);
+                    }
+                });
+
+                // 容忍度調整
+                toleranceSlider.addEventListener('input', (e) => {
+                    this.tolerance = parseInt(e.target.value);
+                    toleranceValue.textContent = this.tolerance;
+                });
+
+                // 畫布點擊
+                this.originalCanvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+
+                // 按鈕功能
+                resetBtn.addEventListener('click', () => this.resetImage());
+                undoBtn.addEventListener('click', () => this.undoLastAction());
+                downloadBtn.addEventListener('click', () => this.downloadResult());
+                addRangeBtn.addEventListener('click', () => this.setMode('add'));
+                subtractRangeBtn.addEventListener('click', () => this.setMode('subtract'));
+                completeBtn.addEventListener('click', () => this.completeSelection());
+                cancelSelectionBtn.addEventListener('click', () => this.cancelSelection());
+            }
+
+            setMode(mode) {
+                this.mode = mode;
+                const modeIndicator = document.getElementById('modeIndicator');
+                const originalCanvas = this.originalCanvas;
+                
+                switch(mode) {
+                    case 'select':
+                        modeIndicator.textContent = '選取物體';
+                        modeIndicator.className = 'mode-indicator mode-select';
+                        originalCanvas.style.cursor = 'crosshair';
+                        break;
+                    case 'add':
+                        modeIndicator.textContent = '增加物體';
+                        modeIndicator.className = 'mode-indicator mode-add';
+                        originalCanvas.style.cursor = 'copy';
+                        break;
+                    case 'subtract':
+                        modeIndicator.textContent = '減少範圍';
+                        modeIndicator.className = 'mode-indicator mode-subtract';
+                        originalCanvas.style.cursor = 'not-allowed';
+                        break;
+                }
+            }
+
+            handleFileSelect(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    this.loadImage(file);
+                }
+            }
+
+            loadImage(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        this.setupCanvases(img);
+                        this.drawOriginalImage(img);
+                        this.resetImage();
+                        this.updateButtons();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            setupCanvases(img) {
+                const maxSize = 450;
+                let { width, height } = img;
+                
+                if (width > maxSize || height > maxSize) {
+                    const ratio = Math.min(maxSize / width, maxSize / height);
+                    width *= ratio;
+                    height *= ratio;
+                }
+
+                this.originalCanvas.width = width;
+                this.originalCanvas.height = height;
+                this.resultCanvas.width = width;
+                this.resultCanvas.height = height;
+            }
+
+            drawOriginalImage(img) {
+                this.originalCtx.drawImage(img, 0, 0, this.originalCanvas.width, this.originalCanvas.height);
+                this.originalImageData = this.originalCtx.getImageData(0, 0, this.originalCanvas.width, this.originalCanvas.height);
+                this.currentImageData = new ImageData(
+                    new Uint8ClampedArray(this.originalImageData.data),
+                    this.originalImageData.width,
+                    this.originalImageData.height
+                );
+            }
+
+            handleCanvasClick(event) {
+                if (!this.originalImageData) return;
+
+                const rect = this.originalCanvas.getBoundingClientRect();
+                const scaleX = this.originalCanvas.width / rect.width;
+                const scaleY = this.originalCanvas.height / rect.height;
+                
+                const x = Math.floor((event.clientX - rect.left) * scaleX);
+                const y = Math.floor((event.clientY - rect.top) * scaleY);
+
+                if (this.mode === 'select') {
+                    this.selectedPixels.clear();
+                    this.magicSelect(x, y);
+                    this.startDashAnimation();
+                } else if (this.mode === 'add') {
+                    this.magicSelect(x, y, true);
+                } else if (this.mode === 'subtract') {
+                    this.magicSelect(x, y, false, true);
+                }
+                
+                this.drawSelectionOverlay();
+                this.updateButtons();
+            }
+
+            magicSelect(startX, startY, addToSelection = false, subtractFromSelection = false) {
+                const imageData = this.originalImageData;
+                const data = imageData.data;
+                const width = imageData.width;
+                const height = imageData.height;
+
+                // 獲取起始點顏色
+                const startIndex = (startY * width + startX) * 4;
+                const targetColor = {
+                    r: data[startIndex],
+                    g: data[startIndex + 1],
+                    b: data[startIndex + 2]
+                };
+
+                // 已訪問的像素標記
+                const visited = new Array(width * height).fill(false);
+                const stack = [{x: startX, y: startY}];
+                const newSelection = new Set();
+
+                while (stack.length > 0) {
+                    const {x, y} = stack.pop();
+                    
+                    if (x < 0 || x >= width || y < 0 || y >= height) continue;
+                    
+                    const index = y * width + x;
+                    if (visited[index]) continue;
+                    
+                    const pixelIndex = index * 4;
+                    const currentColor = {
+                        r: data[pixelIndex],
+                        g: data[pixelIndex + 1],
+                        b: data[pixelIndex + 2]
+                    };
+
+                    // 檢查顏色相似度
+                    if (this.colorDistance(targetColor, currentColor) <= this.tolerance) {
+                        visited[index] = true;
+                        newSelection.add(index);
+                        
+                        // 添加相鄰像素到堆疊
+                        stack.push({x: x + 1, y: y});
+                        stack.push({x: x - 1, y: y});
+                        stack.push({x: x, y: y + 1});
+                        stack.push({x: x, y: y - 1});
+                    }
+                }
+
+                // 根據模式更新選取範圍
+                if (subtractFromSelection) {
+                    newSelection.forEach(index => this.selectedPixels.delete(index));
+                } else {
+                    newSelection.forEach(index => this.selectedPixels.add(index));
+                }
+            }
+
+            colorDistance(color1, color2) {
+                return Math.sqrt(
+                    Math.pow(color1.r - color2.r, 2) +
+                    Math.pow(color1.g - color2.g, 2) +
+                    Math.pow(color1.b - color2.b, 2)
+                );
+            }
+
+            drawSelectionOverlay() {
+                // 重繪原圖
+                this.originalCtx.putImageData(this.originalImageData, 0, 0);
+                
+                if (this.selectedPixels.size === 0) return;
+
+                // 找出選取區域的邊界
+                const bounds = this.getSelectionBounds();
+                if (!bounds) return;
+
+                // 繪製虛線邊框
+                this.originalCtx.strokeStyle = '#ff0000';
+                this.originalCtx.lineWidth = 2;
+                this.originalCtx.setLineDash([8, 4]);
+                this.originalCtx.lineDashOffset = this.dashOffset;
+                
+                // 繪製選取區域的輪廓
+                this.drawSelectionOutline();
+            }
+
+            getSelectionBounds() {
+                if (this.selectedPixels.size === 0) return null;
+                
+                const width = this.originalImageData.width;
+                let minX = width, minY = this.originalImageData.height;
+                let maxX = 0, maxY = 0;
+                
+                this.selectedPixels.forEach(index => {
+                    const x = index % width;
+                    const y = Math.floor(index / width);
+                    minX = Math.min(minX, x);
+                    maxX = Math.max(maxX, x);
+                    minY = Math.min(minY, y);
+                    maxY = Math.max(maxY, y);
+                });
+                
+                return { minX, minY, maxX, maxY };
+            }
+
+            drawSelectionOutline() {
+                const width = this.originalImageData.width;
+                const height = this.originalImageData.height;
+                const processed = new Set();
+                
+                this.originalCtx.beginPath();
+                
+                this.selectedPixels.forEach(index => {
+                    const x = index % width;
+                    const y = Math.floor(index / width);
+                    
+                    // 檢查四個邊是否需要繪製邊界
+                    const left = x === 0 || !this.selectedPixels.has(index - 1);
+                    const right = x === width - 1 || !this.selectedPixels.has(index + 1);
+                    const top = y === 0 || !this.selectedPixels.has(index - width);
+                    const bottom = y === height - 1 || !this.selectedPixels.has(index + width);
+                    
+                    if (left) {
+                        this.originalCtx.moveTo(x, y);
+                        this.originalCtx.lineTo(x, y + 1);
+                    }
+                    if (right) {
+                        this.originalCtx.moveTo(x + 1, y);
+                        this.originalCtx.lineTo(x + 1, y + 1);
+                    }
+                    if (top) {
+                        this.originalCtx.moveTo(x, y);
+                        this.originalCtx.lineTo(x + 1, y);
+                    }
+                    if (bottom) {
+                        this.originalCtx.moveTo(x, y + 1);
+                        this.originalCtx.lineTo(x + 1, y + 1);
+                    }
+                });
+                
+                this.originalCtx.stroke();
+            }
+
+            startDashAnimation() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                }
+                
+                const animate = () => {
+                    this.dashOffset -= 0.5;
+                    this.drawSelectionOverlay();
+                    this.animationId = requestAnimationFrame(animate);
+                };
+                
+                animate();
+            }
+
+            completeSelection() {
+                if (this.selectedPixels.size === 0) return;
+                
+                this.saveToHistory();
+                
+                // 反向邏輯：移除未選取的像素（保留選取的像素）
+                const data = this.currentImageData.data;
+                const width = this.currentImageData.width;
+                const height = this.currentImageData.height;
+                
+                for (let i = 0; i < width * height; i++) {
+                    if (!this.selectedPixels.has(i)) {
+                        const pixelIndex = i * 4;
+                        data[pixelIndex + 3] = 0; // 設為透明（去除背景）
+                    }
+                }
+                
+                // 清除選取和停止動畫
+                this.selectedPixels.clear();
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+                
+                // 重繪原圖和結果
+                this.originalCtx.putImageData(this.originalImageData, 0, 0);
+                this.updateResult();
+                this.setMode('select');
+                this.updateButtons();
+            }
+
+            cancelSelection() {
+                this.selectedPixels.clear();
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+                this.originalCtx.putImageData(this.originalImageData, 0, 0);
+                this.setMode('select');
+                this.updateButtons();
+            }
+
+            updateResult() {
+                this.resultCtx.clearRect(0, 0, this.resultCanvas.width, this.resultCanvas.height);
+                
+                // 繪製棋盤格背景
+                this.drawCheckerboard();
+                
+                // 繪製去背圖片
+                this.resultCtx.putImageData(this.currentImageData, 0, 0);
+            }
+
+            drawCheckerboard() {
+                const size = 10;
+                for (let y = 0; y < this.resultCanvas.height; y += size) {
+                    for (let x = 0; x < this.resultCanvas.width; x += size) {
+                        const isEven = (Math.floor(x / size) + Math.floor(y / size)) % 2 === 0;
+                        this.resultCtx.fillStyle = isEven ? '#f0f0f0' : '#e0e0e0';
+                        this.resultCtx.fillRect(x, y, size, size);
+                    }
+                }
+            }
+
+            saveToHistory() {
+                this.history.push(new ImageData(
+                    new Uint8ClampedArray(this.currentImageData.data),
+                    this.currentImageData.width,
+                    this.currentImageData.height
+                ));
+                
+                // 限制歷史記錄數量
+                if (this.history.length > 10) {
+                    this.history.shift();
+                }
+            }
+
+            resetImage() {
+                if (this.originalImageData) {
+                    this.currentImageData = new ImageData(
+                        new Uint8ClampedArray(this.originalImageData.data),
+                        this.originalImageData.width,
+                        this.originalImageData.height
+                    );
+                    this.selectedPixels.clear();
+                    if (this.animationId) {
+                        cancelAnimationFrame(this.animationId);
+                        this.animationId = null;
+                    }
+                    this.originalCtx.putImageData(this.originalImageData, 0, 0);
+                    this.updateResult();
+                    this.setMode('select');
+                    this.history = [];
+                }
+            }
+
+            undoLastAction() {
+                if (this.history.length > 0) {
+                    this.currentImageData = this.history.pop();
+                    this.updateResult();
+                    this.updateButtons();
+                }
+            }
+
+            updateButtons() {
+                const hasImage = this.originalImageData !== null;
+                const hasHistory = this.history.length > 0;
+                const hasSelection = this.selectedPixels.size > 0;
+                
+                document.getElementById('resetBtn').disabled = !hasImage;
+                document.getElementById('undoBtn').disabled = !hasHistory;
+                document.getElementById('downloadBtn').disabled = !hasImage;
+                document.getElementById('addRangeBtn').disabled = !hasSelection;
+                document.getElementById('subtractRangeBtn').disabled = !hasSelection;
+                document.getElementById('completeBtn').disabled = !hasSelection;
+                document.getElementById('cancelSelectionBtn').disabled = !hasSelection;
+            }
+
+            downloadResult() {
+                if (!this.currentImageData) return;
+                
+                const link = document.createElement('a');
+                link.download = 'magic-select-result.png';
+                link.href = this.resultCanvas.toDataURL();
+                link.click();
+            }
+        }
+
+        // 初始化工具
+        new MagicSelectTool();
+    </script>
+</body>
+</html>
